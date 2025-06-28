@@ -1,0 +1,144 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/scroll_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <!-- 包裹所有内容，用于整体偏移 -->
+    <FrameLayout
+        android:id="@+id/float_wrapper"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:id="@+id/root_content"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- 上部两个区域左右并排 -->
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="61dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="2"
+            android:paddingBottom="16dp">
+
+            <!-- 左侧 -->
+            <LinearLayout
+                android:id="@+id/left_section"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/sample_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="调用次数"
+                    android:textSize="24sp"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:id="@+id/textifhooked"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="hooked"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:id="@+id/textParam1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="p1"
+                    android:textSize="18sp" />
+            </LinearLayout>
+
+            <!-- 右侧 -->
+            <LinearLayout
+                android:id="@+id/right_section"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/sample_text2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="调用次数"
+                    android:textSize="24sp"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:id="@+id/textifhooked2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="hooked"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:id="@+id/textParam2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="p2"
+                    android:textSize="18sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- 执行间隔控件 -->
+        <TextView
+            android:id="@+id/interval_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="执行间隔："
+            android:textSize="16sp"
+            android:layout_marginTop="16dp" />
+
+        <SeekBar
+            android:id="@+id/interval_seekbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="1000"
+            android:progress="200" />
+
+        <TextView
+            android:id="@+id/interval_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="200 ms"
+            android:textSize="14sp"
+            android:layout_marginTop="8dp"
+            android:layout_gravity="end" />
+
+        <TextView
+            android:id="@+id/execution_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="已执行时间：0 ms"
+            android:textSize="16sp"
+            android:layout_marginTop="16dp" />
+
+        <!-- 常亮开关 -->
+        <Switch
+            android:id="@+id/keep_screen_on_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="保持屏幕常亮"
+            android:layout_marginTop="16dp" />
+    </LinearLayout>
+    </LinearLayout>
+    </FrameLayout>
+</ScrollView>
