@@ -1,6 +1,16 @@
-# G.R.I.L
+# G.I.R.L
 
 ​	G.I.R.L. — Gadget-Injection Runtime for Lua。支持LUA脚本的轻量化android JAVA方法hook框架。可用于逆向分析与开发测试。
+
+组件：
+
+https://github.com/Lynnette177/GirlLoader
+
+https://github.com/Lynnette177/GirlClient
+
+演示视频：
+
+https://www.bilibili.com/video/BV1s9KmzVE1i/
 
 ## 开发初衷：
 
@@ -30,7 +40,7 @@
 -f 让tinjector以spawn方式进行注入
 -k 指定端口号。默认8888
 
-具体配合Client的使用，参见3.GirlClient
+具体配合Client的使用，参见3.GirlClient。例子参见最后一部分。
 
 ## 1.GirlHook
 
@@ -136,24 +146,68 @@ python main.py 192.168.1.1 8888
 
 ​	连接后，主界面如下：
 
-<img src="./GIRLhook.assets/image-20250628213307543.png" alt="image-20250628213307543" style="zoom:33%;" />
+<img src="./README.assets/image-20250628213307543.png" alt="image-20250628213307543" style="zoom:33%;" />
 
 ​	最下方是操作按钮。首先刷新所有类，筛选后找出要hook的方法所在的类，点击方法名，会自动生成模板。
 
-<img src="./GIRLhook.assets/image-20250628213403329.png" alt="image-20250628213403329" style="zoom:33%;" />
+<img src="./README.assets/image-20250628213403329.png" alt="image-20250628213403329" style="zoom:33%;" />
 
 ​	两个函数分别是进入时和离开时会执行的。第一个函数返回值应该是boolean, args, number，分别代表：是否执行原函数、传递给原函数的参数列表、不执行时的默认返回值。后者的ret则是返回值，可以直接进行修改，修改后返回即可。
 
 ​	此时可以利用GIRL的LUAAPI，比如我们Hook的是一个返回String，参数String的方法，那么我们可以打印出它的值。编写好脚本后，点击安装Hook即可。此时脚本被自动保存至文件。下次如果要hook相同函数，直接点击加载即可。同时，也会缓存至已安装hook列表。点击右下列表表项，可以快速加载脚本和切换正在操作的函数。
 
-<img src="./GIRLhook.assets/image-20250628213647443.png" alt="image-20250628213647443" style="zoom:33%;" />
+<img src="./README.assets/image-20250628213647443.png" alt="image-20250628213647443" style="zoom:33%;" />
 
 ​	右键表项可以单独unhook一个函数，当然，也可以一次性unhook所有函数
 
-<img src="./GIRLhook.assets/image-20250628213752943.png" alt="image-20250628213752943" style="zoom:33%;" />
+<img src="./README.assets/image-20250628213752943.png" alt="image-20250628213752943" style="zoom:33%;" />
 
 ​	print将会在日志区进行打印。例如，这里我们hook了一个签名函数。在日志区打印出签名内容和签名。
 
-<img src="./GIRLhook.assets/image-20250628213902887.png" alt="image-20250628213902887" style="zoom:33%;" />
+<img src="./README.assets/image-20250628213902887.png" alt="image-20250628213902887" style="zoom:33%;" />
 
 刷新已安装hook按钮则会从客户端(so)重新读取所有已经安装的hook。
+
+## 例子
+
+​	从Android Studio编译运行GirlHook APK，这是一个演示程序，会自动加载libgirlhook.so。未被Hook时会显示如下。
+
+<img src="./README.assets/image-20250628221725185.png" alt="image-20250628221725185" style="zoom:25%;" />
+
+​	编写一个LUA脚本，修改入参。这里不修改返回值了，原理一致。tlong会在ui上展示。tint大于1判断为被hook。点击UI右上角安装Hook。
+
+```lua
+function loopFunctionLLLLLL_enter(args)
+    local testStruct = jobject_to_luatable(args[1])
+    local darray = javaarray_to_luatable(args[2])
+    local sarray = javaarray_to_luatable(args[3])
+    local struct_array = javaarray_to_luatable(args[4])
+    local listTest = javalist_to_luatable(args[5])
+    testStruct["tlong"] = 0x888
+    testStruct["tint"] = 0x10
+    print(listTest)
+    listTest[1] = "修改列表测试"
+    apply_soltable_to_existing_javalist(listTest, args[5])
+
+    darray[1] = 0.001
+    darray[2] = 0.002
+
+    sarray[1] = "修改字符串测试"
+    apply_soltable_to_existing_jobject(testStruct, args[1])
+    apply_soltable_to_existing_javaarray(sarray, args[3])
+    apply_soltable_to_existing_javaarray(darray, args[2])
+    return true, args, 0
+end
+
+function loopFunctionLLLLLL_leave(ret)
+    return ret
+end
+```
+
+​       可见hook成功，参数被修改，ui上发生变化，同时，读取参数中的内容也log了出来。
+
+![image-20250628222017308](./README.assets/image-20250628222017308.png)
+
+​	对应查看android studio中的logcat，发现修改生效。
+
+![image-20250628222046221](./README.assets/image-20250628222046221.png)
