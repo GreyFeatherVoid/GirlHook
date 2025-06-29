@@ -13,8 +13,6 @@
 #include "../JVM/JVM.h"
 #include "../GlobalStore/GlobalStore.h"
 
-static constexpr uint32_t RUNINSTANCE_DIFF_DECODE = 0x79EFCC;
-static constexpr uint32_t JNI_MANAGER_OFFSET = 0x270;
 typedef void* ClassLoaderPtr;
 typedef std::string CLASSNAMETYPE;
 typedef struct {

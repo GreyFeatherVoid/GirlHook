@@ -24,7 +24,11 @@
 void main_thread(){
     sleep(5);
     LUA::init_lua_bridge();
-    ArtInternals::Init();
+    bool ok = ArtInternals::Init();
+    if (!ok){
+        LOGE("Unsupported System! Please set your offsets in Findclass.cpp");
+        return;
+    }
     JavaEnv env;
     Class_Method_Finder::iterate_class_info(env.get());
 

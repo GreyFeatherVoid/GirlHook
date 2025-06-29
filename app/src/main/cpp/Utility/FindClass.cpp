@@ -45,7 +45,20 @@ namespace ArtInternals {
         //RuntimeInstance = *(uintptr_t*)((uintptr_t)DecodeFunc + RUNINSTANCE_DIFF_DECODE);//测试用硬编码
         LOGI("RuntimeInstance: %p", (void *) RuntimeInstance);
 
-        jniIDManager = *reinterpret_cast<void **>(RuntimeInstance + JNI_MANAGER_OFFSET);
+        bool ok = ClassStruct_Detector::getArtRuntimeSpec((void*)ArtInternals::RuntimeInstance, myenv.getJVM(), &RunTimeSpec);
+        if (ok) {
+            printf("Found offsets:\n");
+            printf("heap: 0x%lx\n", RunTimeSpec.heap);
+            printf("threadList: 0x%lx\n", RunTimeSpec.threadList);
+            printf("internTable: 0x%lx\n", RunTimeSpec.internTable);
+            printf("classLinker: 0x%lx\n", RunTimeSpec.classLinker);
+            printf("jniIdManager: 0x%lx\n", RunTimeSpec.jniIdManager);
+        } else {
+            printf("Failed to locate offsets\n");
+            return false;
+        }
+
+        jniIDManager = *reinterpret_cast<void **>(RuntimeInstance + RunTimeSpec.jniIdManager);
         LOGI("jniIDManager: %p", jniIDManager);
 
         if (!Invoke) {
@@ -131,19 +144,6 @@ namespace ArtInternals {
             bool ok = ClassStruct_Detector::detect_artmethod_layout(myenv.get(), &ArtMethodLayout);
             if (!ok){
                 LOGE("Failed to Detect ArtMethod Layout.");
-                return false;
-            }
-
-            ok = ClassStruct_Detector::getArtRuntimeSpec((void*)ArtInternals::RuntimeInstance, myenv.getJVM(), &RunTimeSpec);
-            if (ok) {
-                printf("Found offsets:\n");
-                printf("heap: 0x%lx\n", RunTimeSpec.heap);
-                printf("threadList: 0x%lx\n", RunTimeSpec.threadList);
-                printf("internTable: 0x%lx\n", RunTimeSpec.internTable);
-                printf("classLinker: 0x%lx\n", RunTimeSpec.classLinker);
-                printf("jniIdManager: 0x%lx\n", RunTimeSpec.jniIdManager);
-            } else {
-                printf("Failed to locate offsets\n");
                 return false;
             }
 
@@ -544,6 +544,8 @@ namespace ClassStruct_Detector {
             void *runtime,
             void *javaVM,
             ArtRuntimeSpecOffsets *outSpec) {
+        int api_level = android_get_device_api_level();
+
         size_t pointerSize = sizeof(void *);
         intptr_t startOffset = (pointerSize == 4) ? 200 : 384;
         intptr_t endOffset = startOffset + (100 * pointerSize);
@@ -551,31 +553,34 @@ namespace ClassStruct_Detector {
         if (runtime == NULL || javaVM == NULL || outSpec == NULL) {
             return false;
         }
+        for (int delta = 4; delta > 0; delta--) {
+            for (intptr_t offset = startOffset; offset < endOffset; offset += pointerSize) {
+                void *value = *(void **) ((uintptr_t) runtime + offset);
+                if (value == javaVM) {
+                    // 找到vm成员偏移，推算其它成员偏移
+                    intptr_t classLinkerOffset = 0;
+                    intptr_t jniIdManagerOffset = 0;
 
-        for (intptr_t offset = startOffset; offset < endOffset; offset += pointerSize) {
-            void *value = *(void **) ((uintptr_t) runtime + offset);
-            if (value == javaVM) {
-                // 找到vm成员偏移，推算其它成员偏移
-                intptr_t classLinkerOffset = 0;
-                intptr_t jniIdManagerOffset = 0;
+                    classLinkerOffset = offset - delta * pointerSize;
+                    //Android15 delta是4，11是3.
+                    jniIdManagerOffset = offset - 1 * pointerSize;
 
-                classLinkerOffset = offset - 4 * pointerSize;
-                jniIdManagerOffset = offset - 1 * pointerSize;
-
-                intptr_t internTableOffset = classLinkerOffset - pointerSize;
-                intptr_t threadListOffset = internTableOffset - pointerSize;
-                intptr_t heapOffset = 0;
+                    intptr_t internTableOffset = classLinkerOffset - pointerSize;
+                    intptr_t threadListOffset = internTableOffset - pointerSize;
+                    intptr_t heapOffset = 0;
 
 
-                heapOffset = threadListOffset - 8 * pointerSize;
-                outSpec->heap = heapOffset;
-                outSpec->threadList = threadListOffset;
-                outSpec->internTable = internTableOffset;
-                outSpec->classLinker = classLinkerOffset;
-                outSpec->jniIdManager = jniIdManagerOffset;
-                ClassLinkerSpecOffsets tmp;
-                if (tryGetArtClassLinkerSpec(runtime, outSpec, &tmp) && tmp.quickGenericJniTrampoline != 0)
-                    return true;
+                    heapOffset = threadListOffset - 8 * pointerSize;
+                    outSpec->heap = heapOffset;
+                    outSpec->threadList = threadListOffset;
+                    outSpec->internTable = internTableOffset;
+                    outSpec->classLinker = classLinkerOffset;
+                    outSpec->jniIdManager = jniIdManagerOffset;
+                    ClassLinkerSpecOffsets tmp;
+                    if (tryGetArtClassLinkerSpec(runtime, outSpec, &tmp) &&
+                        tmp.quickGenericJniTrampoline != 0)
+                        return true;
+                }
             }
         }
 
