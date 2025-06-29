@@ -1,6 +1,6 @@
 # G.I.R.L
 
-​	G.I.R.L. — Gadget-Injection Runtime for Lua。支持LUA脚本的轻量化android JAVA方法hook框架。可用于逆向分析与开发测试。
+​	G.I.R.L. — Gadget-Injection Runtime for Lua。支持LUA脚本的轻量化android JAVA方法hook框架。可用于逆向分析与开发测试。理论上支持API30+的系统。Android11、15、16测试通过。
 
 组件：
 
@@ -52,7 +52,7 @@ https://www.bilibili.com/video/BV1s9KmzVE1i/
 
 ### Girl的功能：
 
-- 自动探测art结构，计算出需要使用的结构的offset。(仅在Android15 16进行测试)
+- 自动探测art结构，计算出需要使用的结构的offset。(仅在Android11、15、16进行测试)
 - 展示全部类名，筛选指定类。展示类全部方法名，筛选指定方法，进行Hook
 - **遍历全部的ClassLoader，遍历全部已加载的类，遍历某类的全部方法(应对加壳软件)**
 - 全自动的shorty等参数生成
