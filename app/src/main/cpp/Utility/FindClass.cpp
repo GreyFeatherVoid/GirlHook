@@ -168,11 +168,11 @@ void* realVisit(void* thiz, void* classloader){
 bool MyVisitClassImpl(void* thiz, void* kclass) {
     if (kclass == nullptr) return true;
     std::string dest = ArtInternals::PrettyDescriptorFn(kclass);
-    size_t pos = dest.find('$');
-    if (pos != std::string::npos) {
-        dest = dest.substr(0, pos);  // 截取 $ 之前的部分
-    }
-    pos = dest.find('[');
+    //size_t pos = dest.find('$');//忽略内部类
+    //if (pos != std::string::npos) {
+    //    dest = dest.substr(0, pos);  // 截取 $ 之前的部分
+    //}
+    size_t pos = dest.find('[');
     if (pos != std::string::npos) {
         dest = dest.substr(0, pos);  // 截取 $ 之前的部分
     }
