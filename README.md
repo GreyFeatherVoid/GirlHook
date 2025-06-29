@@ -42,6 +42,10 @@ https://www.bilibili.com/video/BV1s9KmzVE1i/
 
 具体配合Client的使用，参见3.GirlClient。例子参见最后一部分。
 
+## 注意事项
+
+​	由于使用文件通信，建议在真机(API30+)上使用或高版本模拟器(API33+)，否则可能出现异常。
+
 ## 1.GirlHook
 
 ​	这是Girl套件的核心。编译后的结果是一个.so文件动态库。采用类似Windows的做法，只要把so注入到进程中，就可以对该进程的函数进行hook。Girl的核心原理是ArtMethod入口点替换。实现原理见https://note.lynnette.uk/article/girlHook
@@ -82,7 +86,7 @@ https://www.bilibili.com/video/BV1s9KmzVE1i/
 | javalist_to_luatable                 | List对象指针(localref)     | Lua table。字段从1开始递增，代表List中所有元素(LUA) | 解构List                                                     |
 | apply_soltable_to_existing_javalist  | lua table，原始List指针    | 无                                                  | 将lua table中对list的修改应用到原始list。                    |
 | getJavaStringContent                 | String的对象指针(localref) | 字符串(LUA)                                         | String是一个类。这个函数将String的内容提取出来。             |
-| createJavaString                     | LUA的字符串                | 对象指针(LocalRef)(LUA)                             | String内容不可变。用于创建新的String类来替换，达到修改值的目的 |
+| createJavaString                     | String，LUA的字符串        | 对象指针(LocalRef)(LUA)                             | String内容不可变。用于创建新的String类来替换，达到修改值的目的。所以第一个参数是原来的String，第二个参数是LUA字符串。如果创建失败，会返回第一个参数作为fallback避免崩溃。 |
 
 ### Girl的源码目录结构
 
