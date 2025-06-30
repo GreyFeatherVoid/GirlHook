@@ -79,9 +79,8 @@ void Commands::parse_command(const std::string& inData){
                 'shorty': shorty,
                 'is_static': is_static,
                 'onEnter_FuncName': funcname_enter,
-                'onEnter_Func': luafunction_enter,
                 'onLeave_FuncName': funcname_leave,
-                'onLeave_Func': luafunction_leave,
+                'script': luafunctions,
         }
          */
         std::string classname = j.value("className","unknown");
@@ -89,13 +88,12 @@ void Commands::parse_command(const std::string& inData){
         std::string shorty = j.value("shorty","unknown");
         bool is_static = j.value("is_static",false);
         std::string onEnterFuncName = j.value("onEnter_FuncName","unknown");
-        std::string onEnterFunc = j.value("onEnter_Func","unknown");
         std::string onLeaveFuncName = j.value("onLeave_FuncName","unknown");
-        std::string onLeaveFunc = j.value("onLeave_Func","unknown");
+        std::string script = j.value("script","unknown");
         std::string org_fullname = j.value("org_fullname", "unknown");
-        LOGI("[通信] Hook内容 %s %s %s %s %d %s %s %s %s",org_fullname.c_str(), classname.c_str(), hookFunction.c_str(),
-             shorty.c_str(),is_static,onEnterFuncName.c_str(), onEnterFunc.c_str(),
-             onLeaveFuncName.c_str(),onLeaveFunc.c_str());
+        LOGI("[通信] Hook内容 %s %s %s %s %d %s %s %s",org_fullname.c_str(), classname.c_str(), hookFunction.c_str(),
+             shorty.c_str(),is_static,onEnterFuncName.c_str(),
+             onLeaveFuncName.c_str(),script.c_str());
         result_json[COMMAND] = j.value(COMMAND, "unknown");
         j.erase(COMMAND);
         result_json[INSTALLED_HOOK_INFO] = j;
@@ -106,9 +104,8 @@ void Commands::parse_command(const std::string& inData){
                          shorty.c_str(),
                          is_static,
                          onEnterFuncName.c_str(),
-                         onEnterFunc.c_str(),
                          onLeaveFuncName.c_str(),
-                         onLeaveFunc.c_str());
+                        script.c_str());
         //将hook信息原封不动的传输回去，而Result表示是否成功，来与客户端的数据进行同步
     }
     if (command == GET_ALL_HOOKS){
@@ -122,9 +119,8 @@ void Commands::parse_command(const std::string& inData){
                 'shorty': shorty,
                 'is_static': is_static,
                 'onEnter_FuncName': funcname_enter,
-                'onEnter_Func': luafunction_enter,
                 'onLeave_FuncName': funcname_leave,
-                'onLeave_Func': luafunction_leave,
+                'script': luafunction,
         }
          * */
         for (const auto& hook : VectorStore<hooked_function>::Instance().GetAll()){
@@ -136,9 +132,8 @@ void Commands::parse_command(const std::string& inData){
             onehook["shorty"] = hook.shorty;
             onehook["is_static"] = hook.isStatic;
             onehook["onEnter_FuncName"] = hook.enterfuncname;
-            onehook["onEnter_Func"] = hook.enterfunc;
             onehook["onLeave_FuncName"] = hook.leavefuncname;
-            onehook["onLeave_Func"] = hook.leavefunc;
+            onehook["script"] = hook.script;
             arr.push_back(onehook);
         }
         result_json[RESULT] = 1;

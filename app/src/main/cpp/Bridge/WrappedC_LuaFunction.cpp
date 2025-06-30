@@ -829,6 +829,6 @@ int64_t WRAP_C_LUA_FUNCTION::createJavaString(sol::object solobj, sol::object so
 
     std::string content = solstr.as<std::string>();
     jstring jstr = env->NewStringUTF(content.c_str());
-
+    //api33这里需要额外的decode，还没写。
     return (int64_t)jstr;  // 以整数形式返回给 Lua
 }

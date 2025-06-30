@@ -93,9 +93,8 @@ int hook_java_method(
                       const char* target_shorty,
                       bool isStatic,
                       const char* enterfuncname,
-                      const char* enterfunc,
                       const char* leavefuncname,
-                      const char* leavefunc) {
+                      const char* script) {
     JavaEnv Jenv;
     JNIEnv* env = Jenv.get();
     JavaVM * vm = Jenv.getJVM();
@@ -105,10 +104,8 @@ int hook_java_method(
         //判断是否为已经安装的hook
         if (installed_hook.org_fullname == org_fullname && installed_hook.Valid){
             //该hook已经安装过，只更新脚本
-            VectorStore<hooked_function>::Instance().Get(installed_index).enterfunc = enterfunc;
-            VectorStore<hooked_function>::Instance().Get(installed_index).leavefunc = leavefunc;
-            LUA::lua->script(enterfunc);
-            LUA::lua->script(leavefunc);
+            VectorStore<hooked_function>::Instance().Get(installed_index).script = script;
+            LUA::lua->script(script);
             return 2;
         }
         installed_index++;
@@ -135,18 +132,10 @@ int hook_java_method(
     LOGI("artMethod : %p", artMethod);
 
     try {
-        LUA::lua->safe_script(enterfunc);
+        LUA::lua->safe_script(script);
     }
     catch (const sol::error& e) {
         std::string installError = std::string("Lua script Enter error: ") + e.what();
-        Commands::tcp_log(installError);
-        return 0;
-    }
-    try {
-        LUA::lua->safe_script(leavefunc);
-    }
-    catch (const sol::error& e) {
-        std::string installError = std::string("Lua script Leave error: ") + e.what();
         Commands::tcp_log(installError);
         return 0;
     }
@@ -175,9 +164,8 @@ int hook_java_method(
             {},
             methodID,
             enterfuncname,
-            enterfunc,
             leavefuncname,
-            leavefunc
+            script
     };
     memcpy((void*)newFunc.backup, (void*)artMethod,ArtInternals::ArtMethodLayout.art_method_size);
     VectorStore<hooked_function>::Instance().Add(newFunc, hookIndex);
@@ -458,6 +446,7 @@ extern "C" uint64_t JNICALL hooks_handler(JNIEnv* env, jobject thiz,uint64_t x2,
         } else if (hookInfo.shorty[checkShorty_index] == 'L') {//对象，全部都是uint32_t
             if (p.second.is<uint64_t>() ) {
                 uint64_t value = p.second.as<uint64_t>();
+                value &= (~(1));//通常需要对齐不然会崩溃
                 uint32_t comporessedPtr = *(uint32_t *) value;
                 memcpy((void *) ((uint64_t) args + argsize), &comporessedPtr, sizeof(uint32_t));
             }

@@ -165,7 +165,7 @@ public class MainActivity extends AppCompatActivity {
                 ListTest.add("列表测试2");
 
                 if (callCount <= callCount2) {
-                    testStruct result = loopFunction(ts,darray,sarray,tarray,ListTest); // 不断调用这个 Java 方法
+                    testStruct result = loopFunction(ts,darray,sarray,tarray,ListTest,"aaa"); // 不断调用这个 Java 方法
                     //Log.d("Float result",String.format("double value: %.6f", result));
                     runOnUiThread(() -> {
                         execTime.setText("已执行时间：" + elapsed / 1000 + " s");
@@ -207,7 +207,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // 被不停调用的 Java 方法
-    private testStruct loopFunction(testStruct structTest,double[] darraytest, String[] sarraytest, testStruct[] structArray, List<String> ListTest) {
+    private testStruct loopFunction(testStruct structTest,double[] darraytest, String[] sarraytest, testStruct[] structArray, List<String> ListTest, String modtest) {
         callCount++;
         result1 = "入参：0x" + Long.toHexString(structTest.tlong);
         Log.d("Double Array", String.format("index0:%f index1:%f", darraytest[0], darraytest[1]));
@@ -216,6 +216,7 @@ public class MainActivity extends AppCompatActivity {
         if (structTest.tboolean)
             Log.d("LoopFunction Struct", String.format("int %d float %f double %f byte %d short %d char %c long %d",structTest.tint,structTest.tfloat, structTest.tdouble,structTest.tbyte,structTest.tshort,structTest.tchar, structTest.tlong));
         Log.d("Struct Array", String.format("index 0 %d   index 1 %d", structArray[0].tint, structArray[1].tint));
+        Log.d("String", modtest);
         return structTest;
     }
     static private boolean loopFunction_static(long x2, int x3, int x4, int x5, int x6, int x7, double v0, double v1, double v2, double v3, double v4, double v5, double v6, double v7, long stackV1,long stackV2){

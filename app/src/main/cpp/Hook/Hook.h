@@ -39,9 +39,8 @@ struct hooked_function{
     uint64_t backup[128];
     jmethodID methodID;
     std::string enterfuncname;
-    std::string enterfunc;
     std::string leavefuncname;
-    std::string leavefunc;
+    std::string script;
 };
 
 
@@ -52,9 +51,8 @@ int hook_java_method(
                       const char* target_shorty,
                       bool isStatic,
                       const char* enterfuncname,
-                      const char* enterfunc,
                       const char* leavefuncname,
-                      const char* leavefunc);
+                      const char* script);
 void unhook(uint32_t hookIndex);
 void unhook_all();
 void testHook(JNIEnv* env);
