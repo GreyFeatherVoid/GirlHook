@@ -59,6 +59,7 @@ https://www.bilibili.com/video/BV1s9KmzVE1i/
 - 自动探测art结构，计算出需要使用的结构的offset。(仅在Android11、15、16进行测试)
 - 展示全部类名，筛选指定类。展示类全部方法名，筛选指定方法，进行Hook
 - **遍历全部的ClassLoader，遍历全部已加载的类，遍历某类的全部方法(应对加壳软件)**
+- 支持dump所有已经加载的dex
 - 全自动的shorty等参数生成
 - Hook Java函数，显示参数内容，修改参数内容，并应用修改。
 - 支持处理自定义结构、数组、List等内容。提供多个api来转换结构至lua table，并提供api从lua table应用修改。
