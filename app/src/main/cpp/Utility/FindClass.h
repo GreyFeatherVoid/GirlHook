@@ -12,6 +12,13 @@
 #include <dlfcn.h>
 #include "../JVM/JVM.h"
 #include "../GlobalStore/GlobalStore.h"
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <stdio.h>
+#include <string.h>
+#include <errno.h>
+
 
 typedef void* ClassLoaderPtr;
 typedef std::string CLASSNAMETYPE;
@@ -154,6 +161,7 @@ enum CollectorType {
 };
 
 namespace Class_Method_Finder{
+    void dumpDexes();
     void iterate_class_info(JNIEnv *env);
     jclass FindClassViaLoadClass(JNIEnv *env, const char *class_name_dot);
     //用method jobject 获取函数名和shorty

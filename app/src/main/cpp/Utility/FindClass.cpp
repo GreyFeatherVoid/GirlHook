@@ -185,6 +185,34 @@ bool MyVisitClassImpl(void* thiz, void* kclass) {
     return true;
 }
 
+bool DumpMemoryToFile(const char* path, const void* data, size_t size) {
+    // 创建文件夹
+    char dir_path[512];
+    strncpy(dir_path, path, sizeof(dir_path));
+    char* last_slash = strrchr(dir_path, '/');
+    if (last_slash != nullptr) {
+        *last_slash = '\0';
+        mkdir(dir_path, 0755);  // 确保 girldump 文件夹存在
+    }
+
+    int fd = open(path, O_CREAT | O_WRONLY | O_TRUNC, 0644);
+    if (fd < 0) {
+        printf("[-] Failed to open %s: %s\n", path, strerror(errno));
+        return false;
+    }
+
+    ssize_t written = write(fd, data, size);
+    if (written != (ssize_t)size) {
+        printf("[-] Write failed: %s\n", strerror(errno));
+        close(fd);
+        return false;
+    }
+
+    close(fd);
+    printf("[+] Dumped %zu bytes to %s\n", size, path);
+    return true;
+}
+
 namespace Class_Method_Finder {
 
     void Store_all_classLoaders(){
@@ -221,6 +249,98 @@ namespace Class_Method_Finder {
     void iterate_class_info(JNIEnv *env){
         Store_all_classLoaders();
         iterate_all_classes();
+    }
+
+    void dumpDexes(){
+        static int begin_offset = 24;//或许根据系统不同而不同 或者根据重复出现三次进行探测 这里先写死
+        static int size_offset = 32;
+
+        std::ifstream cmdline("/proc/self/cmdline");
+        std::string pkg;
+        std::getline(cmdline, pkg, '\0');
+
+        JavaEnv myenv;
+        auto env = myenv.get();
+        jclass baseDexClassLoader = env->FindClass("dalvik/system/BaseDexClassLoader");
+        jfieldID pathListField = env->GetFieldID(baseDexClassLoader, "pathList", "Ldalvik/system/DexPathList;");
+
+        Store_all_classLoaders();
+        for (const auto & loader : VectorStore<ClassLoaderPtr>::Instance().GetAll()) {
+            auto classLoader = (jobject) ArtInternals::newlocalrefFn(env, loader);
+            LOGI("classloader %p", classLoader);
+            if (!env->IsInstanceOf(classLoader, baseDexClassLoader)) {
+                ArtInternals::deletelocalrefFn(env, classLoader);
+                continue;
+            }
+            jobject pathList = env->GetObjectField(classLoader,
+                                                   pathListField);
+            jclass dexPathListClass = env->GetObjectClass(pathList);
+            jfieldID dexElementsField = env->GetFieldID(dexPathListClass, "dexElements", "[Ldalvik/system/DexPathList$Element;");
+            jobjectArray dexElementsArray = (jobjectArray) env->GetObjectField(pathList, dexElementsField);
+
+            jsize len = env->GetArrayLength(dexElementsArray);
+            for (jsize i = 0; i < len; ++i) {
+                jobject element = env->GetObjectArrayElement(dexElementsArray, i);
+                jclass elementClass = env->GetObjectClass(element);
+                jfieldID dexFileField = env->GetFieldID(elementClass, "dexFile", "Ldalvik/system/DexFile;");
+                jobject dexFile = env->GetObjectField(element, dexFileField);
+                if (dexFile == nullptr) continue;
+
+                // 获取 dexFile.getName()
+                jclass dexFileClass = env->GetObjectClass(dexFile);
+                jmethodID getName = env->GetMethodID(dexFileClass, "getName", "()Ljava/lang/String;");
+                jstring nameStr = (jstring) env->CallObjectMethod(dexFile, getName);
+                const char* name = env->GetStringUTFChars(nameStr, nullptr);
+                LOGI("Dex file path: %s", name);
+                env->ReleaseStringUTFChars(nameStr, name);
+
+                jfieldID mCookieField = env->GetFieldID(dexFileClass, "mCookie", "Ljava/lang/Object;");
+                jobject cookieObject = env->GetObjectField(dexFile, mCookieField);
+
+                if (cookieObject == nullptr) {
+                    LOGE("mCookie is null");
+                    return;
+                }
+
+                if (env->IsInstanceOf(cookieObject, env->FindClass("[J"))) {
+                    jlongArray array = (jlongArray) cookieObject;
+                    jsize len = env->GetArrayLength(array);
+                    jlong* elements = env->GetLongArrayElements(array, nullptr);
+                    for (jsize i = 0; i < len; ++i) {
+                        LOGI("mcookie[%d] = 0x%llx", i, (unsigned long long)elements[i]);
+                        if (elements[i]){
+                            //这里去找dex所在位置
+                            uintptr_t dex_position = *(uintptr_t*)(begin_offset + elements[i]);
+                            if (dex_position > 0x10000) {
+                                uint64_t dex_size = *(uint64_t * )(size_offset + elements[i]);
+                                LOGI("Dexfile = 0x%lx size = 0x%lx", dex_position, dex_size);
+                                uint8_t *tmpDex = new uint8_t[dex_size];
+                                memcpy(tmpDex, (void *) dex_position, dex_size);
+                                //修复头
+                                char magic[8] = {0x64, 0x65, 0x78, 0x0a, 0x30, 0x33, 0x35, 0x00};
+                                memcpy(tmpDex, (void *)magic, 8);
+                                if (dex_position > 0x10000) {//有些可能无效
+                                    char namebuffer[1024] = {0};
+                                    sprintf(namebuffer, "/data/data/%s/girldump/%lx.dex",
+                                            pkg.c_str(), dex_size);
+                                    DumpMemoryToFile(namebuffer,
+                                                     (void *) dex_position, dex_size);
+                                }
+                            }
+                        }
+                    }
+                    env->ReleaseLongArrayElements(array, elements, 0);
+                } else if (env->IsInstanceOf(cookieObject, env->FindClass("java/lang/Long"))) {
+                    jclass longClass = env->FindClass("java/lang/Long");
+                    jmethodID longValue = env->GetMethodID(longClass, "longValue", "()J");
+                    jlong cookie = env->CallLongMethod(cookieObject, longValue);
+                    LOGI("mcookie = 0x%llx", (unsigned long long)cookie);
+                } else {
+                    LOGE("mCookie is unknown type");
+                }
+            }
+            ArtInternals::deletelocalrefFn(env, classLoader);
+        }
     }
 
     jclass FindClassViaLoadClass(JNIEnv *env, const char *class_name_dot) {

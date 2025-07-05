@@ -5,12 +5,10 @@
 #ifndef GIRLHOOK_COMMANDS_H
 #define GIRLHOOK_COMMANDS_H
 #include "../json/json.h"
+#include "../Hook/Hook.h"
 #include "../Utility/GirlLog.h"
-#include "../Utility/FindClass.h"
 #include "../GlobalStore/GlobalStore.h"
 #include "../Communicate/Communicate.h"
-#include "../Hook/Hook.h"
-
 namespace Commands{
     void parse_command(const std::string& inData);
     void tcp_log(const std::string& logdata);

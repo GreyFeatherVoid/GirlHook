@@ -27,6 +27,9 @@
 #define UNINSTALL_HOOK "UNINSTALL_HOOK"
 #define UNINSTALL_FULLNAME "UNINSTALL_FULLNAME"
 
+//脱壳
+#define DUMP_DEX "DUMP_DEX"
+
 #include "Commands.h"
 using json = nlohmann::json;
 
@@ -153,6 +156,12 @@ void Commands::parse_command(const std::string& inData){
             }
             index++;
         }
+    }
+    if (command == DUMP_DEX){
+        Class_Method_Finder::dumpDexes();
+        result_json[RESULT] = 1;
+        result_json[COMMAND] = DUMP_DEX;
+        tcp_log("Dump完成: /data/data/<包名>/girldump");
     }
     Communicate::getInstance().add(result_json.dump());
 }

@@ -5,6 +5,7 @@
 #ifndef GIRLHOOK_HOOK_H
 #define GIRLHOOK_HOOK_H
 
+#include "../Utility/FindClass.h"
 #include "../Utility/GirlLog.h"
 #include <jni.h>
 #include <android/log.h>
@@ -12,7 +13,6 @@
 #include <cstring>
 #include <dlfcn.h>
 #include "../JVM/JVM.h"
-#include "../Utility/FindClass.h"
 #include "../GlobalStore/GlobalStore.h"
 #include <cstdint>
 #include <cstddef>

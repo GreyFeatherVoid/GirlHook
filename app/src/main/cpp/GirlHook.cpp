@@ -31,7 +31,6 @@ void main_thread(){
     }
     JavaEnv env;
     Class_Method_Finder::iterate_class_info(env.get());
-
     sleep(5);
     while(1){
         char* buffer = nullptr;
