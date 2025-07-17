@@ -22,7 +22,7 @@
 //sleep(4);
 //unhook_all();
 void main_thread(){
-    sleep(5);
+    //sleep(5);
     LUA::init_lua_bridge();
     bool ok = ArtInternals::Init();
     if (!ok){
@@ -31,8 +31,10 @@ void main_thread(){
     }
     JavaEnv env;
     Class_Method_Finder::iterate_class_info(env.get());
-    sleep(5);
+    //sleep(5);
     while(1){
+        usleep(10);
+        //bridgeTest();
         char* buffer = nullptr;
         if (Communicate::getInstance().read(&buffer)) {
             Commands::parse_command(std::string(buffer));

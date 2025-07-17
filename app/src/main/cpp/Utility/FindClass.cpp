@@ -21,6 +21,10 @@ namespace ArtInternals {
     deletelocalref deletelocalrefFn = nullptr;
     VisitClasses VisitClassesFn = nullptr;
     PrettyDescriptor PrettyDescriptorFn = nullptr;
+    PrettyTypeOf PrettyTypeOfFn = nullptr;
+    RequestConcurrentGCAndSaveObject RequestConcurrentGCAndSaveObjectFn = nullptr;
+    IncrementDisableMovingGC IncrementDisableMovingGCFn = nullptr;
+    DecrementDisableMovingGC DecrementDisableMovingGCFn = nullptr;
 
     ArtMethodSpec ArtMethodLayout = {};
     ArtRuntimeSpecOffsets RunTimeSpec = {};
@@ -136,10 +140,30 @@ namespace ArtInternals {
                     tool::find_path_from_maps("libart.so"),
                     "_ZN3art6mirror5Class16PrettyDescriptorEv");
         }
+        if (!PrettyTypeOfFn){
+            PrettyTypeOfFn = (PrettyTypeOf)tool::get_address_from_module(
+                    tool::find_path_from_maps("libart.so"),
+                    "_ZN3art6mirror6Object12PrettyTypeOfEv");
+        }
+        if (!RequestConcurrentGCAndSaveObjectFn){
+            RequestConcurrentGCAndSaveObjectFn = (RequestConcurrentGCAndSaveObject)tool::get_address_from_module(
+                    tool::find_path_from_maps("libart.so"),"_ZN3art2gc4Heap32RequestConcurrentGCAndSaveObjectEPNS_6ThreadEbjPNS_6ObjPtrINS_6mirror6ObjectEEE");
+        }
+        if (!IncrementDisableMovingGCFn){
+            IncrementDisableMovingGCFn = (IncrementDisableMovingGC)tool::get_address_from_module(
+                    tool::find_path_from_maps("libart.so"),"_ZN3art2gc4Heap24IncrementDisableMovingGCEPNS_6ThreadE");
+
+        }
+        if (!DecrementDisableMovingGCFn){
+            DecrementDisableMovingGCFn = ( DecrementDisableMovingGC)tool::get_address_from_module(
+                    tool::find_path_from_maps("libart.so"),"_ZN3art2gc4Heap24DecrementDisableMovingGCEPNS_6ThreadE");
+
+        }
         if(DecodeFunc && RuntimeInstance && jniIDManager && Invoke && GetCurrentThread &&
                SGCFn && DestroyGCFn && ScopedSuspendAllFn && destroyScopedSuspendAllFn &&
                newGlobalrefFn && deleteGlobalrefFn && VisitClassLoadersFn && newlocalrefFn
-               && VisitClassesFn && PrettyDescriptorFn)
+               && VisitClassesFn && PrettyDescriptorFn && PrettyTypeOfFn && RequestConcurrentGCAndSaveObjectFn
+               && IncrementDisableMovingGCFn && DecrementDisableMovingGCFn)
         {
             bool ok = ClassStruct_Detector::detect_artmethod_layout(myenv.get(), &ArtMethodLayout);
             if (!ok){
@@ -690,7 +714,7 @@ namespace ClassStruct_Detector {
                     intptr_t heapOffset = 0;
 
 
-                    heapOffset = threadListOffset - 8 * pointerSize;
+                    heapOffset = threadListOffset - 9 * pointerSize;
                     outSpec->heap = heapOffset;
                     outSpec->threadList = threadListOffset;
                     outSpec->internTable = internTableOffset;

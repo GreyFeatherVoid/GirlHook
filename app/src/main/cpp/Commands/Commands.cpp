@@ -30,6 +30,10 @@
 //脱壳
 #define DUMP_DEX "DUMP_DEX"
 
+//直接执行脚本
+#define EXCUTE_SCRIPT  "EXCUTE_SCRIPT"
+#define SCRIPT "script"
+
 #include "Commands.h"
 using json = nlohmann::json;
 
@@ -162,6 +166,15 @@ void Commands::parse_command(const std::string& inData){
         result_json[RESULT] = 1;
         result_json[COMMAND] = DUMP_DEX;
         tcp_log("Dump完成: /data/data/<包名>/girldump");
+    }
+    if (command == EXCUTE_SCRIPT){
+        result_json[RESULT] = 1;
+        result_json[COMMAND] = EXCUTE_SCRIPT;
+        sol::protected_function_result result = LUA::lua->safe_script(j.value(SCRIPT, "unknown"), sol::script_pass_on_error);
+        if (!result.valid()) {
+            sol::error err = result;
+            tcp_log(std::string("脚本执行错误") + err.what());
+        }
     }
     Communicate::getInstance().add(result_json.dump());
 }

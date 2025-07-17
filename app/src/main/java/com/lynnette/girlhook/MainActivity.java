@@ -253,5 +253,11 @@ public class MainActivity extends AppCompatActivity {
             handler.postDelayed(this, moveInterval);
         }
     };
+    private int testCaller(int in){
+        return in + 1;
+    }
+    static private int testCaller_static(int in){
+        return in + 2;
+    }
 
 }

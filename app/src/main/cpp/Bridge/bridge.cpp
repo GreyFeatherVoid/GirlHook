@@ -21,6 +21,9 @@ void LUA::init_lua_bridge(){
     LUA::lua->set("getJavaStringContent",&WRAP_C_LUA_FUNCTION::getJavaStringContent);
     LUA::lua->set("createJavaString",&WRAP_C_LUA_FUNCTION::createJavaString);
 
+    LUA::lua->set("find_class_instance",&WRAP_C_LUA_FUNCTION::find_class_instance);
+    LUA::lua->set("call_java_function",&WRAP_C_LUA_FUNCTION::call_java_function);
+
     LUA::lua->script(R"(
     function hookTester(args)
         local testStruct = jobject_to_luatable(args[1])
@@ -60,13 +63,14 @@ void LUA::init_lua_bridge(){
 void bridgeTest() {
 
     const std::string script = R"(
-        function add(a, b)
-            return a + b
-        end
-
-        local result = add(10, 32)
-        print("Result of add(10, 32) = " .. result)
-        return result
+        local instances = find_class_instance("com.lynnette.girlhook.MainActivity")
+        print(instances)
+        local info = {"com.lynnette.girlhook.MainActivity","testCaller","ZZ", false,instances[1]}
+        local args = {true}
+        local ret = call_java_function(info, args)
+        print(type(ret))
+        print(ret)
+        return ret
     )";
 
     // 执行脚本

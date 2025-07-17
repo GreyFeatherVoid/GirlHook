@@ -192,54 +192,67 @@ namespace ClassStruct_Detector{
     bool detect_artmethod_layout(JNIEnv* env, ArtMethodSpec* output);
 }
 namespace ArtInternals {
-    using DecodeMethodIdFn = void* (*)(void* jniIdManager, jmethodID methodID);
+    using DecodeMethodIdFn = void *(*)(void *jniIdManager, jmethodID methodID);
     extern DecodeMethodIdFn DecodeFunc;
 
     extern uintptr_t RuntimeInstance;
-    extern void* jniIDManager;
+    extern void *jniIDManager;
 
-    using ArtMethodInvoke = void (*)(void*, void*, uint32_t*, uint32_t, jvalue*, const char*);
+    using ArtMethodInvoke = void (*)(void *, void *, uint32_t *, uint32_t, jvalue *, const char *);
     extern ArtMethodInvoke Invoke;
 
-    using CurrentFromGDB = void* (*)();
+    using CurrentFromGDB = void *(*)();
     extern CurrentFromGDB GetCurrentThread;
 
-    using ScopedGCSection = int64_t(*)(void* self, void* thread,GcCause cause, CollectorType);
+    using ScopedGCSection = int64_t(*)(void *self, void *thread, GcCause cause, CollectorType);
     extern ScopedGCSection SGCFn;
 
-    using destroyScopedGCSection = void (*)(void* self);
+    using destroyScopedGCSection = void (*)(void *self);
     extern destroyScopedGCSection DestroyGCFn;
 
-    using ScopedSuspendAll = int64_t(*)(void* self, const char* cause, bool long_suspend);
+    using ScopedSuspendAll = int64_t(*)(void *self, const char *cause, bool long_suspend);
     extern ScopedSuspendAll ScopedSuspendAllFn;//注意要用到的时候一定要先JavaEnv创建一个实例，拿一次env和jvm，这里面我会让线程attach上，不然会崩溃。
 
-    using destroyScopedSuspendAll = void(*)(void *self);
+    using destroyScopedSuspendAll = void (*)(void *self);
     extern destroyScopedSuspendAll destroyScopedSuspendAllFn;
 
-    using newGlobalref = void*(*)(void*env,void* thread,void* objptr);
+    using newGlobalref = void *(*)(void *env, void *thread, void *objptr);
     extern newGlobalref newGlobalrefFn;
 
-    using deleteGlobalref = void*(*)(void*env,void* thread,void* jobj);
+    using deleteGlobalref = void *(*)(void *env, void *thread, void *jobj);
     extern deleteGlobalref deleteGlobalrefFn;
 
-    using VisitClassLoaders = int64_t(*)(void* thiz, void* visitor);
+    using VisitClassLoaders = int64_t(*)(void *thiz, void *visitor);
     extern VisitClassLoaders VisitClassLoadersFn;
 
-    using newlocalref = int64_t(*)(void *envext, void* mirrorobj);
-    extern  newlocalref newlocalrefFn;
+    using newlocalref = int64_t(*)(void *envext, void *mirrorobj);
+    extern newlocalref newlocalrefFn;
 
-    using deletelocalref =int64_t(*)(void* envext, void* jobject);
+    using deletelocalref = int64_t(*)(void *envext, void *jobject);
     extern deletelocalref deletelocalrefFn;
 
-    using VisitClasses = void(*)(void* classLinker , void* ClassVisitor);
+    using VisitClasses = void (*)(void *classLinker, void *ClassVisitor);
     extern VisitClasses VisitClassesFn;
 
-    using PrettyDescriptor = std::string(*)(void* thiz);//art::mirror::Class *
+    using PrettyDescriptor = std::string(*)(void *thiz);//art::mirror::Class *
     extern PrettyDescriptor PrettyDescriptorFn;
     extern ArtMethodSpec ArtMethodLayout;
     extern ArtRuntimeSpecOffsets RunTimeSpec;
     extern ClassLinkerSpecOffsets ClassLinkerSpec;
 
+    using PrettyTypeOf = void (*)(void *thiz, std::string *out);
+    extern PrettyTypeOf PrettyTypeOfFn;
+
+    using RequestConcurrentGCAndSaveObject = int64_t(*)(void *thiz,
+                                                        void *a2,//thread
+                                                        bool force_full,
+                                                        uint32_t observed_gc_num, void *obj);
+    extern RequestConcurrentGCAndSaveObject RequestConcurrentGCAndSaveObjectFn;
+
+    using IncrementDisableMovingGC = void(*)(void* thiz, void *thread);
+    using DecrementDisableMovingGC = void(*)(void* thiz, void *thread);
+    extern IncrementDisableMovingGC IncrementDisableMovingGCFn;
+    extern DecrementDisableMovingGC DecrementDisableMovingGCFn;
 
 //LOGI("NEWLOCALREF:%p", realThis);
 //deleterefFunc(env, realThis);

@@ -1,6 +1,6 @@
 # G.I.R.L
 
-​	G.I.R.L. — Gadget-Injection Runtime for Lua。支持LUA脚本的轻量化android JAVA方法hook框架。可用于逆向分析与开发测试。理论上支持API30+的系统。Android11、15、16测试通过。
+​	G.I.R.L. — Gadget-Injection Runtime for Lua。支持LUA脚本的轻量化android JAVA方法hook框架。可用于逆向分析与开发测试。理论上支持API30+的系统。Android11、15、16测试通过。支持Hook java方法、dump dex以及RPC调用函数。
 
 组件：
 
@@ -63,6 +63,8 @@ https://www.bilibili.com/video/BV1s9KmzVE1i/
 - 全自动的shorty等参数生成
 - Hook Java函数，显示参数内容，修改参数内容，并应用修改。
 - 支持处理自定义结构、数组、List等内容。提供多个api来转换结构至lua table，并提供api从lua table应用修改。
+- 自动寻找所有java实例
+- 支持RPC调用函数
 
 ### Girl的特点：
 
@@ -77,17 +79,19 @@ https://www.bilibili.com/video/BV1s9KmzVE1i/
 
 ### Girl的LUA API
 
-| 名称                                 | 参数                       | 返回值                                              | 作用                                                         |
-| ------------------------------------ | -------------------------- | --------------------------------------------------- | ------------------------------------------------------------ |
-| print                                | 字符串或者luatable等内容   | 无                                                  | 向客户端发送日志，显示内容                                   |
-| jobject_to_luatable                  | jobject指针(localref)      | lua table。每个字段对应table的一个字段。(LUA)       | 将对象解构                                                   |
-| apply_soltable_to_existing_jobject   | lua table，原始对象指针    | 无                                                  | 将lua table中的修改应用到原始结构体                          |
-| javaarray_to_luatable                | 数组对象指针(localref)     | lua table。字段从1开始递增，代表数组中所有元素(LUA) | 解构数组                                                     |
-| apply_soltable_to_existing_javaarray | lua table，原始数组指针    | 无                                                  | 将lua table中对数组的修改应用到原始数组                      |
-| javalist_to_luatable                 | List对象指针(localref)     | Lua table。字段从1开始递增，代表List中所有元素(LUA) | 解构List                                                     |
-| apply_soltable_to_existing_javalist  | lua table，原始List指针    | 无                                                  | 将lua table中对list的修改应用到原始list。                    |
-| getJavaStringContent                 | String的对象指针(localref) | 字符串(LUA)                                         | String是一个类。这个函数将String的内容提取出来。             |
-| createJavaString                     | String，LUA的字符串        | 对象指针(LocalRef)(LUA)                             | String内容不可变。用于创建新的String类来替换，达到修改值的目的。所以第一个参数是原来的String，第二个参数是LUA字符串。如果创建失败，会返回第一个参数作为fallback避免崩溃。 |
+| 名称                                 | 参数                                           | 返回值                                              | 作用                                                         |
+| ------------------------------------ | ---------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------ |
+| print                                | 字符串或者luatable等内容                       | 无                                                  | 向客户端发送日志，显示内容                                   |
+| jobject_to_luatable                  | jobject指针(localref)                          | lua table。每个字段对应table的一个字段。(LUA)       | 将对象解构                                                   |
+| apply_soltable_to_existing_jobject   | lua table，原始对象指针                        | 无                                                  | 将lua table中的修改应用到原始结构体                          |
+| javaarray_to_luatable                | 数组对象指针(localref)                         | lua table。字段从1开始递增，代表数组中所有元素(LUA) | 解构数组                                                     |
+| apply_soltable_to_existing_javaarray | lua table，原始数组指针                        | 无                                                  | 将lua table中对数组的修改应用到原始数组                      |
+| javalist_to_luatable                 | List对象指针(localref)                         | Lua table。字段从1开始递增，代表List中所有元素(LUA) | 解构List                                                     |
+| apply_soltable_to_existing_javalist  | lua table，原始List指针                        | 无                                                  | 将lua table中对list的修改应用到原始list。                    |
+| getJavaStringContent                 | String的对象指针(localref)                     | 字符串(LUA)                                         | String是一个类。这个函数将String的内容提取出来。             |
+| createJavaString                     | String，LUA的字符串                            | 对象指针(LocalRef)(LUA)                             | String内容不可变。用于创建新的String类来替换，达到修改值的目的。所以第一个参数是原来的String，第二个参数是LUA字符串。如果创建失败，会返回第一个参数作为fallback避免崩溃。 |
+| find_class_instance                  | lua的字符串，类名                              | 找到的所有实例，是table格式                         | 用来自动寻找java实例，用来作为rpc的this指针                  |
+| call_java_function                   | 两个table，分别是rpc信息和参数，由模板自动生成 | java方法的返回值                                    | 用来调用java方法                                             |
 
 ### Girl的源码目录结构
 
@@ -142,6 +146,8 @@ https://www.bilibili.com/video/BV1s9KmzVE1i/
 ​	因So注入进程后无法开启TCP与客户端进行沟通而编写的工具elf。主要功能负责接收、发送TCP消息，将TCP消息与文件消息连接起来，实现桥梁的功能。目前还没有写注入功能，所以直接借用了TInjector。后续可能考虑仿照TInjector写一些注入逻辑。暂时先这样。
 
 ## GirlClient
+
+### 1. Hook
 
 ​	python编写，ui基于QT，运行简单。启动时接受两个参数，分别是ip和端口号，例如：
 
@@ -216,3 +222,27 @@ end
 ​	对应查看android studio中的logcat，发现修改生效。
 
 ![image-20250628222046221](./README.assets/image-20250628222046221.png)
+
+### 2. Dump dex
+
+​	Girl在更新后已经支持dump加载的所有dex。连接后点击右下角按钮即可。
+
+![image-20250717164718835](./README.assets/image-20250717164718835.png)
+
+### 3.调用函数
+
+​	右键某一方法，点击RPC
+
+![image-20250717164748868](./README.assets/image-20250717164748868.png)
+
+​	将会自动生成调用模板。动态与静态不同。动态会自动添加寻找实例函数。
+
+![image-20250717164815850](./README.assets/image-20250717164815850.png)
+
+​	例如，调用一下获取用户信息的函数。这是一个非static函数。
+
+![image-20250717164849979](./README.assets/image-20250717164849979.png)
+
+​	调用一个静态函数，签名函数
+
+![image-20250717165026782](./README.assets/image-20250717165026782.png)

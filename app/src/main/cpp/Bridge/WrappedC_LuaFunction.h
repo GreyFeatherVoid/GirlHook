@@ -10,6 +10,8 @@
 #include "bridge.h"
 #include "../Commands/Commands.h"
 #include <set>
+#include "../include/jvmti.h"
+
 
 namespace WRAP_C_LUA_FUNCTION {
     void LUA_LOG(sol::this_state ts, sol::variadic_args args);
@@ -33,5 +35,9 @@ namespace WRAP_C_LUA_FUNCTION {
     std::string getJavaStringContent(sol::object solobj);
     //String不可变，要修改只能用Create
     int64_t createJavaString(sol::object solobj, sol::object solstr);
+
+    sol::table  find_class_instance(sol::this_state ts, sol::variadic_args solargs);
+    sol::object call_java_function(sol::this_state ts, sol::variadic_args solargs);
 }
+
 #endif //GIRLHOOK_WRAPPEDC_LUAFUNCTION_H
