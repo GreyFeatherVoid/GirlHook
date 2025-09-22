@@ -2,6 +2,7 @@
 // Created by weibo on 2025/6/21.
 //
 #include "GirlLog.h"
+//hahahaha
 
 namespace Logger{
     void hex_dump_log(const void *addr, size_t size, const char *tag) {
